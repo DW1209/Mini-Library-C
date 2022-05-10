@@ -1,10 +1,6 @@
 #ifndef __LIBMINI_H__
 #define __LIBMINI_H__   // avoid reentrant
 
-// #define _NSIG       64
-// #define _NSIG_BPW   64
-// #define _NSIG_WORDS (_NSIG / _NSIG_BPW)
-
 typedef int         pid_t;
 typedef int         uid_t;
 typedef long long   size_t;
@@ -17,13 +13,12 @@ typedef union sigval {
     void*   sival_ptr;
 } sigval_t;
 typedef struct sigset_t { 
-    // unsigned int sig[_NSIG_WORDS];
     unsigned int sig;
 } sigset_t;
 typedef struct jmp_buf_s {
     long long reg[8];
     sigset_t mask;
-} jmp_buf;
+} jmp_buf[1];
 typedef struct siginfo_t {
     int             si_signo;       // Signal Number
     int             si_errno;       // An errno value

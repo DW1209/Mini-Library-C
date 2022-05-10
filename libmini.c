@@ -2,8 +2,6 @@
 
 long errno;
 
-#define SIG_MIN     0
-#define SIG_MAX     31
 #define PERRMSG_MIN 0
 #define PERRMSG_MAX 34
 #define WRAPPER_RETval(type) errno = 0; if (ret < 0) { errno = -ret; return -1; } return ((type) ret);
@@ -110,17 +108,14 @@ int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
 }
 
 int sigismember(const sigset_t *set, int signum) {
-    if (signum < SIG_MIN || signum > SIG_MAX) return -1;
     return (set->sig & (1 << (signum - 1)));
 }
 
 int sigaddset(sigset_t *set, int signum) {
-    if (signum < SIG_MIN || signum > SIG_MAX) return -1;
     set->sig |= 1 << (signum - 1); return 0;
 }
 
 int sigdelset(sigset_t *set, int signum) {
-    if (signum < SIG_MIN || signum > SIG_MAX) return -1;
     set->sig &= ~(1 << (signum - 1)); return 0;
 }
 
