@@ -1,20 +1,18 @@
 #ifndef __LIBMINI_H__
 #define __LIBMINI_H__   // avoid reentrant
 
-typedef int         pid_t;
-typedef int         uid_t;
-typedef long long   size_t;
-typedef long long   ssize_t;
-typedef int         clock_t;
-typedef void        (*sighandler_t)(int);
+typedef int                 pid_t;
+typedef int                 uid_t;
+typedef long long           size_t;
+typedef long long           ssize_t;
+typedef int                 clock_t;
+typedef unsigned long int   sigset_t;
+typedef void                (*sighandler_t)(int);
 
 typedef union sigval {
     int     sival_int;
     void*   sival_ptr;
 } sigval_t;
-typedef struct sigset_t { 
-    unsigned int sig;
-} sigset_t;
 typedef struct jmp_buf_s {
     long long reg[8];
     sigset_t mask;

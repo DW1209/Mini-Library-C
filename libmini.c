@@ -92,8 +92,7 @@ void perror(const char *prefix) {
 }
 
 unsigned int sleep(unsigned int seconds) {
-    struct timespec req, rem; 
-    req.tv_sec = seconds; req.tv_nsec = 0;
+    struct timespec req, rem; req.tv_sec = seconds; req.tv_nsec = 0;
     long ret = sys_nanosleep(&req, &rem);
 
     if (ret >= 0) return ret;
@@ -103,42 +102,43 @@ unsigned int sleep(unsigned int seconds) {
 }
 
 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact) {
-    long ret = sys_rt_sigaction(signum, act, oldact, sizeof(act));
+    long ret = sys_rt_sigaction(signum, act, oldact, sizeof(sigset_t));
     WRAPPER_RETval(int);
 }
 
 int sigismember(const sigset_t *set, int signum) {
-    return (set->sig & (1 << (signum - 1)));
+    return *set & (1 << (signum - 1));
 }
 
 int sigaddset(sigset_t *set, int signum) {
-    set->sig |= 1 << (signum - 1); return 0;
+    *set |= (1 << (signum - 1)); return 0;
+
 }
 
 int sigdelset(sigset_t *set, int signum) {
-    set->sig &= ~(1 << (signum - 1)); return 0;
+    *set &= ~(1 << (signum - 1)); return 0;
 }
 
 int sigemptyset(sigset_t *set) {
-    set->sig = 0; return 0;
+    *set = 0; return 0;
 }
 
 int sigfillset(sigset_t *set) {
-    set->sig = 0xffffffff; return 0;
+    *set = __UINT64_MAX__; return 0;
 }
 
 int sigpending(sigset_t *set) {
-    long ret = sys_rt_sigpending(set, sizeof(set));
+    long ret = sys_rt_sigpending(set, sizeof(sigset_t));
     WRAPPER_RETval(int);
 }
 
 int sigprocmask(int how, const sigset_t *set, sigset_t *oldset) {
-    long ret = sys_rt_sigprocmask(how, set, oldset, sizeof(set));
+    long ret = sys_rt_sigprocmask(how, set, oldset, sizeof(sigset_t));
     WRAPPER_RETval(int);
 }
 
 sighandler_t signal(int signum, sighandler_t handler) {
-
+    
 }
 
 int setjmp(jmp_buf env) {

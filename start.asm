@@ -11,4 +11,3 @@ _start:
     mov     rdi, rax
     call    sys_exit        ; exit code
     ret
- 
