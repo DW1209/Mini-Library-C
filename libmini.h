@@ -1,9 +1,9 @@
 #ifndef __LIBMINI_H__
 #define __LIBMINI_H__   // avoid reentrant
 
-#define _NSIG       64
-#define _NSIG_BPW   64
-#define _NSIG_WORDS (_NSIG / _NSIG_BPW)
+// #define _NSIG       64
+// #define _NSIG_BPW   64
+// #define _NSIG_WORDS (_NSIG / _NSIG_BPW)
 
 typedef int         pid_t;
 typedef int         uid_t;
@@ -17,7 +17,8 @@ typedef union sigval {
     void*   sival_ptr;
 } sigval_t;
 typedef struct sigset_t { 
-    unsigned int sig[_NSIG_WORDS];
+    // unsigned int sig[_NSIG_WORDS];
+    unsigned int sig;
 } sigset_t;
 typedef struct jmp_buf_s {
     long long reg[8];
@@ -208,10 +209,13 @@ struct sigaction {
 
 // system calls
 long sys_write(int fd, const void *buf, size_t count);
+long sys_rt_sigaction(int sig, const struct sigaction *act, struct sigaction *oact, size_t sigsetsize);
+long sys_rt_sigprocmask(int how, const sigset_t *set, sigset_t *oset, size_t sigsetsize);
 long sys_pause();
 long sys_nanosleep(struct timespec *rqtp, struct timespec *rmtp);
 long sys_alarm(unsigned int seconds);
 long sys_exit(int error_code) __attribute__ ((noreturn));
+long sys_rt_sigpending(sigset_t *set, size_t sigsetsize);
 
 // wrapper
 ssize_t         write(int fd, const void *buf, size_t count);
@@ -223,9 +227,9 @@ size_t          strlen(const char *s);
 void            perror(const char *prefix);
 unsigned int    sleep(unsigned int s);
 int             sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
-int             sigismember(const sigset_t *set, int sig);
-int             sigaddset(sigset_t *set, int sig);
-int             sigdelset(sigset_t *set, int sig);
+int             sigismember(const sigset_t *set, int signum);
+int             sigaddset(sigset_t *set, int signum);
+int             sigdelset(sigset_t *set, int signum);
 int             sigemptyset(sigset_t *set);
 int             sigfillset(sigset_t *set);
 int             sigpending(sigset_t *set);

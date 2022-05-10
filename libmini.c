@@ -2,42 +2,12 @@
 
 long errno;
 
-#define WRAPPER_RETval(type) errno = 0; if (ret < 0) { errno = -ret; return -1; } return ((type) ret);
-#define WRAPPER_RETptr(type) errno = 0; if (ret < 0) { errno = -ret; return NULL; } return ((type) ret);
-
-ssize_t write(int fd, const void *buf, size_t count) {
-    long ret = sys_write(fd, buf, count);
-    WRAPPER_RETval(ssize_t);
-}
-
-int pause() {
-    long ret = sys_pause();
-    WRAPPER_RETval(int);
-}
-
-unsigned int alarm(unsigned int seconds) {
-    long ret = sys_alarm(seconds);
-    WRAPPER_RETval(unsigned int);
-}
-
-void exit(int error_code) {
-    sys_exit(error_code);
-    // never returns? 
-}
-
-void bzero(void *s, size_t size) {
-    char *ptr = (char *) s;
-    while (size-- > 0) *ptr++ = '\0';
-}
-
-size_t strlen(const char *s) {
-    size_t count = 0;
-    while (*s++) count++;
-    return count;
-}
-
+#define SIG_MIN     0
+#define SIG_MAX     31
 #define PERRMSG_MIN 0
 #define PERRMSG_MAX 34
+#define WRAPPER_RETval(type) errno = 0; if (ret < 0) { errno = -ret; return -1; } return ((type) ret);
+#define WRAPPER_RETptr(type) errno = 0; if (ret < 0) { errno = -ret; return NULL; } return ((type) ret);
 
 static const char *errmsg[] = {
     "Success", 
@@ -76,6 +46,36 @@ static const char *errmsg[] = {
     "Math result not representable"
 };
 
+ssize_t write(int fd, const void *buf, size_t count) {
+    long ret = sys_write(fd, buf, count);
+    WRAPPER_RETval(ssize_t);
+}
+
+int pause() {
+    long ret = sys_pause();
+    WRAPPER_RETval(int);
+}
+
+unsigned int alarm(unsigned int seconds) {
+    long ret = sys_alarm(seconds);
+    WRAPPER_RETval(unsigned int);
+}
+
+void exit(int error_code) {
+    sys_exit(error_code);
+}
+
+void bzero(void *s, size_t size) {
+    char *ptr = (char *) s;
+    while (size-- > 0) *ptr++ = '\0';
+}
+
+size_t strlen(const char *s) {
+    size_t count = 0;
+    while (*s++) count++;
+    return count;
+}
+
 void perror(const char *prefix) {
     const char *unknown = "Unknown"; long backup = errno;
 
@@ -105,35 +105,41 @@ unsigned int sleep(unsigned int seconds) {
 }
 
 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact) {
-
+    long ret = sys_rt_sigaction(signum, act, oldact, sizeof(act));
+    WRAPPER_RETval(int);
 }
 
-int sigismember(const sigset_t *set, int sig) {
-
+int sigismember(const sigset_t *set, int signum) {
+    if (signum < SIG_MIN || signum > SIG_MAX) return -1;
+    return (set->sig & (1 << (signum - 1)));
 }
 
-int sigaddset(sigset_t *set, int sig) {
-
+int sigaddset(sigset_t *set, int signum) {
+    if (signum < SIG_MIN || signum > SIG_MAX) return -1;
+    set->sig |= 1 << (signum - 1); return 0;
 }
 
-int sigdelset(sigset_t *set, int sig) {
-
+int sigdelset(sigset_t *set, int signum) {
+    if (signum < SIG_MIN || signum > SIG_MAX) return -1;
+    set->sig &= ~(1 << (signum - 1)); return 0;
 }
 
 int sigemptyset(sigset_t *set) {
-
+    set->sig = 0; return 0;
 }
 
 int sigfillset(sigset_t *set) {
-
+    set->sig = 0xffffffff; return 0;
 }
 
 int sigpending(sigset_t *set) {
-
+    long ret = sys_rt_sigpending(set, sizeof(set));
+    WRAPPER_RETval(int);
 }
 
 int sigprocmask(int how, const sigset_t *set, sigset_t *oldset) {
-
+    long ret = sys_rt_sigprocmask(how, set, oldset, sizeof(set));
+    WRAPPER_RETval(int);
 }
 
 sighandler_t signal(int signum, sighandler_t handler) {
