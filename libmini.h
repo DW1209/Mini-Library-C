@@ -10,7 +10,6 @@ typedef int         uid_t;
 typedef long long   size_t;
 typedef long long   ssize_t;
 typedef int         clock_t;
-typedef char        jmp_buf[1];
 typedef void        (*sighandler_t)(int);
 
 typedef union sigval {
@@ -20,6 +19,10 @@ typedef union sigval {
 typedef struct sigset_t { 
     unsigned int sig[_NSIG_WORDS];
 } sigset_t;
+typedef struct jmp_buf_s {
+    long long reg[8];
+    sigset_t mask;
+} jmp_buf;
 typedef struct siginfo_t {
     int             si_signo;       // Signal Number
     int             si_errno;       // An errno value
