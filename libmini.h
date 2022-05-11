@@ -3,6 +3,9 @@
 
 typedef int                 pid_t;
 typedef int                 uid_t;
+typedef int                 gid_t;
+typedef long long           off_t;
+typedef int                 mode_t;
 typedef long long           size_t;
 typedef long long           ssize_t;
 typedef int                 clock_t;
@@ -169,27 +172,37 @@ extern long errno;
 #define SIGUNUSED   31
 
 // from /usr/include/x86-64-linux-gnu/bits/sigaction.h
-#define SA_NOCLDSTOP    1           // Don't send SIGCHLD when children stop.
-#define SA_NOCLDWAIT    2           // Don't create zombie on child death.
-#define SA_SIGINFO      4           // Invoke signal-catching function with three arguments instead of one.
+#define SA_NOCLDSTOP    1                   // Don't send SIGCHLD when children stop.
+#define SA_NOCLDWAIT    2                   // Don't create zombie on child death.
+#define SA_SIGINFO      4                   // Invoke signal-catching function with three arguments instead of one.
 
-#define SA_ONSTACK      0x08000000  // Use signal stack by using `sa_restorer`.
-#define SA_RESTART      0x10000000  // Restart syscall on signal return.
-#define SA_INTERRUPT    0x20000000  // Historical no-op.
-#define SA_NODEFER      0x40000000  // Don't automatically block the signal when its handleris being executed.
-#define SA_RESETHAND    0x80000000  // Reset to SIG_DEL on entry to handler
+#define SA_ONSTACK      0x08000000          // Use signal stack by using `sa_restorer`.
+#define SA_RESTART      0x10000000          // Restart syscall on signal return.
+#define SA_INTERRUPT    0x20000000          // Historical no-op.
+#define SA_NODEFER      0x40000000          // Don't automatically block the signal when its handleris being executed.
+#define SA_RESETHAND    0x80000000          // Reset to SIG_DEL on entry to handler
 
-#define SIG_BLOCK       0           // Block signals.
-#define SIG_UNBLOCK     1           // Unblock signals
-#define SIG_SETMASK     2           // Set the set of blocked signals.
+#define SIG_BLOCK       0                   // Block signals.
+#define SIG_UNBLOCK     1                   // Unblock signals
+#define SIG_SETMASK     2                   // Set the set of blocked signals.
 
-#define SIG_ERR         (void (*)()) -1
-#define SIG_DEL         (void (*)()) 0
-#define SIG_IGN         (void (*)()) 1
+#define SIG_ERR         (sighandler_t) -1
+#define SIG_DEL         (sighandler_t) 0
+#define SIG_IGN         (sighandler_t) 1
 
 struct timespec {
     long tv_sec;        // seconds
     long tv_nsec;       // nanoseconds
+};
+
+struct timeval {
+    long tv_sec;        // seconds;
+    long tv_usec;       // microseconds;
+};
+
+struct timezone {
+    int tz_minuteswest; // minutes west of Greewich
+    int tz_dsttime;     // type of DST correction
 };
 
 struct sigaction {
@@ -201,32 +214,92 @@ struct sigaction {
 };
 
 // system calls
+long sys_read(int fd, char *buf, size_t count);
 long sys_write(int fd, const void *buf, size_t count);
+long sys_open(const char *filename, int flags, ... /* mode */);
+long sys_close(unsigned int fd);
+long sys_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off);
+long sys_mprotect(void *addr, size_t len, int prot);
+long sys_munmap(void *addr, size_t len);
 long sys_rt_sigaction(int sig, const struct sigaction *act, struct sigaction *oact, size_t sigsetsize);
 long sys_rt_sigprocmask(int how, const sigset_t *set, sigset_t *oset, size_t sigsetsize);
+long sys_pipe(int *filedes);
+long sys_dup(int filedes);
+long sys_dup2(int oldfd, int newfd);
 long sys_pause();
 long sys_nanosleep(struct timespec *rqtp, struct timespec *rmtp);
 long sys_alarm(unsigned int seconds);
+long sys_fork(void);
 long sys_exit(int error_code) __attribute__ ((noreturn));
+long sys_getcwd(char *buf, size_t size);
+long sys_chdir(const char *pathname);
+long sys_rename(const char *oldname, const char *newname);
+long sys_mkdir(const char *pathname, int mode);
+long sys_rmdir(const char *pathname);
+long sys_creat(const char *pathname, int mode);
+long sys_link(const char *oldname, const char *newname);
+long sys_unlink(const char *pathname);
+long sys_readlink(const char *path, char *buf, size_t bufsz);
+long sys_chmod(const char *filename, mode_t mode);
+long sys_chown(const char *filename, uid_t user, gid_t group);
+long sys_umask(int mask);
+long sys_gettimeofday(struct timeval *tv, struct timezone *tz);
+long sys_getuid();
+long sys_getgid();
+long sys_setuid(uid_t uid);
+long sys_setgid(gid_t gid);
+long sys_geteuid();
+long sys_getegid();
 long sys_rt_sigpending(sigset_t *set, size_t sigsetsize);
 
 // wrapper
+ssize_t         read(int fd, char *buf, size_t count);
 ssize_t         write(int fd, const void *buf, size_t count);
+int             open(const char *filename, int flags, ... /* mode */);
+int             close(unsigned int fd);
+void*           mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off);
+int             mprotect(void *addr, size_t len, int prot);
+int             munmap(void *addr, size_t len);
+int             sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
+int             sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
+int             pipe(int *filedes);
+int             dup(int filedes);
+int             dup2(int oldfd, int newfd);
 int             pause();
+int             nanosleep(struct timespec *rqtp, struct timespec *rmtp);
 unsigned int    alarm(unsigned int seconds);
+pid_t           fork(void);
 void            exit(int error_code) __attribute__ ((noreturn));
+char*           getcwd(char *buf, size_t size);
+int             chdir(const char *pathname);
+int             rename(const char *oldname, const char *newname);
+int             mkdir(const char *pathname, int mode);
+int             rmdir(const char *pathname);
+int             creat(const char *pathname, int mode);
+int             link(const char *oldname, const char *newname);
+int             unlink(const char *pathname);
+ssize_t         readlink(const char *path, char *buf, size_t bufsz);
+int             chmod(const char *filename, mode_t mode);
+int             chown(const char *filename, uid_t user, gid_t group);
+int             umask(int mask);
+int             gettimeofday(struct timeval *tv, struct timezone *tz);
+uid_t           getuid();
+gid_t           getgid();
+int             setuid(uid_t uid);
+int             setgid(gid_t gid);
+uid_t           geteuid();
+gid_t           getegid();
+int             sigpending(sigset_t *set);
+
 void            bzero(void *s, size_t size);
 size_t          strlen(const char *s);
 void            perror(const char *prefix);
 unsigned int    sleep(unsigned int s);
-int             sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
 int             sigismember(const sigset_t *set, int signum);
 int             sigaddset(sigset_t *set, int signum);
 int             sigdelset(sigset_t *set, int signum);
 int             sigemptyset(sigset_t *set);
 int             sigfillset(sigset_t *set);
-int             sigpending(sigset_t *set);
-int             sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
 sighandler_t    signal(int signum, sighandler_t handler);
 int             setjmp(jmp_buf env);
 void            longjmp(jmp_buf env, int val);
