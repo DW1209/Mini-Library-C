@@ -9,9 +9,11 @@ typedef int                 mode_t;
 typedef long long           size_t;
 typedef long long           ssize_t;
 typedef int                 clock_t;
-typedef unsigned long int   sigset_t;
 typedef void                (*sighandler_t)(int);
 
+typedef struct sigset {
+    unsigned long int sig[1];
+} sigset_t;
 typedef union sigval {
     int     sival_int;
     void*   sival_ptr;

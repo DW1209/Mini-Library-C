@@ -267,24 +267,23 @@ unsigned int sleep(unsigned int seconds) {
 }
 
 int sigismember(const sigset_t *set, int signum) {
-    return *set & (1 << (signum - 1));
+    return set->sig[0] & (1 << (signum - 1));
 }
 
 int sigaddset(sigset_t *set, int signum) {
-    *set |= (1 << (signum - 1)); return 0;
-
+    set->sig[0] |= (1 << (signum - 1)); return 0;
 }
 
 int sigdelset(sigset_t *set, int signum) {
-    *set &= ~(1 << (signum - 1)); return 0;
+    set->sig[0] &= ~(1 << (signum - 1)); return 0;
 }
 
 int sigemptyset(sigset_t *set) {
-    *set = 0; return 0;
+    set->sig[0] = 0; return 0;
 }
 
 int sigfillset(sigset_t *set) {
-    *set = __UINT64_MAX__; return 0;
+    set->sig[0] = __UINT64_MAX__; return 0;
 }
 
 sighandler_t signal(int signum, sighandler_t handler) {
