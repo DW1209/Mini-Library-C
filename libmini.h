@@ -11,18 +11,18 @@ typedef long long           ssize_t;
 typedef int                 clock_t;
 typedef void                (*sighandler_t)(int);
 
-typedef struct sigset {
-    unsigned long int sig[1];
-} sigset_t;
 typedef union sigval {
     int     sival_int;
     void*   sival_ptr;
 } sigval_t;
+typedef struct sigset {
+    unsigned long int sig[1];
+} sigset_t;
 typedef struct jmp_buf_s {
     long long reg[8];
     sigset_t mask;
 } jmp_buf[1];
-typedef struct siginfo_t {
+typedef struct siginfo {
     int             si_signo;       // Signal Number
     int             si_errno;       // An errno value
     int             si_code;        // Signal code
@@ -138,38 +138,38 @@ extern long errno;
 #define ERANGE  34  // Math result not representable
 
 // from /usr/include/x86_64-linux-gnu/asm/signal.h
-#define SIGHUP      1
-#define SIGINT      2
-#define SIGQUIT     3
-#define SIGILL      4
-#define SIGTRAP     5
-#define SIGABRT     6
+#define SIGHUP      1       // Hangup or death detected on controlling terminal / process
+#define SIGINT      2       // Interrupt from keyboard
+#define SIGQUIT     3       // Quit from keyboard
+#define SIGILL      4       // Illegal Instruction
+#define SIGTRAP     5       // Trace / breakpoint trap
+#define SIGABRT     6       // Abort signal from abort(3)
 #define SIGIOT      6
-#define SIGBUS      7
-#define SIGFPE      8
-#define SIGKILL     9
-#define SIGUSR1     10
-#define SIGSEGV     11
-#define SIGUSR2     12
-#define SIGPIPE     13
-#define SIGALRM     14
-#define SIGTERM     15
-#define SIGSTKFLT   16
-#define SIGCHLD     17
-#define SIGCONT     18
-#define SIGSTOP     19
-#define SIGTSTP     20
-#define SIGTTIN     21
-#define SIGTTOU     22
-#define SIGURG      23
-#define SIGXCPU     24
-#define SIGXFSZ     25
-#define SIGVTALRM   26
-#define SIGPROF     27
-#define SIGWINCH    28
-#define SIGIO       29
+#define SIGBUS      7       // Bus error (bad memory access)
+#define SIGFPE      8       // Floating point exception
+#define SIGKILL     9       // Kill signal
+#define SIGUSR1     10      // User-defined signal 1
+#define SIGSEGV     11      // Invalid memory reference
+#define SIGUSR2     12      // User-defined signal 2
+#define SIGPIPE     13      // Broken pipe: write to pipe with no readers
+#define SIGALRM     14      // Timer signal from alarm(2)
+#define SIGTERM     15      // Termination signal
+#define SIGSTKFLT   16      // (unused) Stack fault on coprocessor (unused)
+#define SIGCHLD     17      // Child stopped or terminated
+#define SIGCONT     18      // Continue if stopped
+#define SIGSTOP     19      // Stop process
+#define SIGTSTP     20      // Stop typed at tty
+#define SIGTTIN     21      // tty input for background process
+#define SIGTTOU     22      // tty output for background process
+#define SIGURG      23      // Urgent condition on socket (4.2 BSD)
+#define SIGXCPU     24      // CPU time limit exceeded (4.2 BSD)
+#define SIGXFSZ     25      // File size limit exceeded (4.2 BSD)
+#define SIGVTALRM   26      // Virtual alarm clock (4.2 BSD)
+#define SIGPROF     27      // Profiling timer expired
+#define SIGWINCH    28      // Window resize signal (4.3 BSD, Sun)
+#define SIGIO       29      // I/O now possible (4.2 BSD)
 #define SIGPOLL     SIGIO
-#define SIGPWR      30
+#define SIGPWR      30      // Power failure (System V)
 #define SIGSYS      31
 #define SIGUNUSED   31
 
@@ -181,8 +181,13 @@ extern long errno;
 #define SA_ONSTACK      0x08000000          // Use signal stack by using `sa_restorer`.
 #define SA_RESTART      0x10000000          // Restart syscall on signal return.
 #define SA_INTERRUPT    0x20000000          // Historical no-op.
-#define SA_NODEFER      0x40000000          // Don't automatically block the signal when its handleris being executed.
+#define SA_NODEFER      0x40000000          // Don't automatically block the signal when its handler's being executed.
 #define SA_RESETHAND    0x80000000          // Reset to SIG_DEL on entry to handler
+
+#define SA_NOMASK       SA_NODEFER          // The historical Linux name for NODEFER
+#define SA_ONESHOT      SA_RESETHAND        // The historical Linux name for RESETHAND
+
+#define SA_RESTORER     0x04000000
 
 #define SIG_BLOCK       0                   // Block signals.
 #define SIG_UNBLOCK     1                   // Unblock signals
@@ -210,7 +215,7 @@ struct timezone {
 struct sigaction {
     void        (*sa_handler)(int);
     void        (*sa_sigaction)(int, siginfo_t *, void *);
-    sigset_t    sa_masks;
+    sigset_t    sa_mask;
     int         sa_flags;
     void        (*sa_restorer)(void);
 };
@@ -225,6 +230,7 @@ long sys_mprotect(void *addr, size_t len, int prot);
 long sys_munmap(void *addr, size_t len);
 long sys_rt_sigaction(int sig, const struct sigaction *act, struct sigaction *oact, size_t sigsetsize);
 long sys_rt_sigprocmask(int how, const sigset_t *set, sigset_t *oset, size_t sigsetsize);
+long sys_rt_sigreturn(unsigned long __unused) __attribute__ ((noreturn));
 long sys_pipe(int *filedes);
 long sys_dup(int filedes);
 long sys_dup2(int oldfd, int newfd);
@@ -264,6 +270,7 @@ int             mprotect(void *addr, size_t len, int prot);
 int             munmap(void *addr, size_t len);
 int             sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
 int             sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
+void            sigreturn() __attribute__ ((noreturn));
 int             pipe(int *filedes);
 int             dup(int filedes);
 int             dup2(int oldfd, int newfd);
