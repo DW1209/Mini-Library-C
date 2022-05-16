@@ -26,7 +26,6 @@ extern	errno
 	gensys	11, 	munmap
 	gensys	13, 	rt_sigaction
 	gensys	14, 	rt_sigprocmask
-	gensys	15, 	rt_sigreturn
 	gensys	22, 	pipe
 	gensys	32, 	dup
 	gensys	33, 	dup2
@@ -80,3 +79,8 @@ open_success:
 	mov 	QWORD[rdi], 	0 	; errno = 0
 open_quit:
 	ret
+
+	global sigreturn:function
+sigreturn:
+	mov		rax, 	15
+	syscall

@@ -39,10 +39,10 @@ int munmap(void *addr, size_t len) {
 }
 
 int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact) {
-    struct sigaction kact, koact;
+    struct kernel_sigaction kact, koact;
 
     if (act) {
-        kact.sa_handler = act->sa_handler;
+        kact.k_sa_handler = act->sa_handler;
         kact.sa_mask.sig[0] = act->sa_mask.sig[0];
         kact.sa_flags = act->sa_flags | SA_RESTORER;
         kact.sa_restorer = sigreturn;
@@ -51,7 +51,7 @@ int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
     long ret = sys_rt_sigaction(signum, &kact, &koact, sizeof(sigset_t));
 
     if (oldact && ret >= 0) {
-        oldact->sa_handler = koact.sa_handler;
+        oldact->sa_handler = koact.k_sa_handler;
         oldact->sa_mask.sig[0] = koact.sa_mask.sig[0];
         oldact->sa_flags = koact.sa_flags;
         oldact->sa_restorer = koact.sa_restorer;
@@ -65,9 +65,7 @@ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset) {
     WRAPPER_RETval(int);
 }
 
-void sigreturn() {
-    sys_rt_sigreturn(15);
-}
+// sigreturn function is implemented in assembly.
 
 int pipe(int *filedes) {
     long ret = sys_pipe(filedes);
@@ -308,8 +306,8 @@ int sigfillset(sigset_t *set) {
 }
 
 sighandler_t signal(int signum, sighandler_t handler) {
-    struct sigaction act, oact;
-    act.sa_handler = handler; sigemptyset(&act.sa_mask); act.sa_flags = 0;
+    struct sigaction act, oact; 
+    act.sa_handler = handler; sigemptyset(&act.sa_mask); act.sa_flags = 0; 
 
     if (signum == SIGALRM) {
         act.sa_flags |= SA_INTERRUPT;
@@ -329,7 +327,7 @@ int setjmp(jmp_buf env) {
         "   mov    %rbx,      (%rdi)    # jmp_buf[0] = rbx\n"
         "   lea    16(%rbp),  %rax      # get previous value of rsp, before call\n"
         "   mov    %rax,      8(%rdi)   # jmp_buf[1] = rsp before call\n"
-        "   mov    (%rbp),    %rax        \n"
+        "   mov    (%rbp),    %rax      \n"
         "   mov    %rax,      16(%rdi)  # jmp_buf[2] = rbp\n"
         "   mov    %r12,      24(%rdi)  # jmp_buf[3] = r12\n"
         "   mov    %r13,      32(%rdi)  # jmp_buf[4] = r13\n"

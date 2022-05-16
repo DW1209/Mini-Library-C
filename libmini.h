@@ -212,12 +212,19 @@ struct timezone {
     int tz_dsttime;     // type of DST correction
 };
 
+struct kernel_sigaction {
+    sighandler_t    k_sa_handler;
+    unsigned long   sa_flags;
+    void            (*sa_restorer)(void);
+    sigset_t        sa_mask;
+};
+
 struct sigaction {
-    void        (*sa_handler)(int);
-    void        (*sa_sigaction)(int, siginfo_t *, void *);
-    sigset_t    sa_mask;
-    int         sa_flags;
-    void        (*sa_restorer)(void);
+    sighandler_t    sa_handler;
+    void            (*sa_sigaction)(int, siginfo_t *, void *);
+    sigset_t        sa_mask;
+    int             sa_flags;
+    void            (*sa_restorer)(void);
 };
 
 // system calls
@@ -228,9 +235,8 @@ long sys_close(unsigned int fd);
 long sys_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off);
 long sys_mprotect(void *addr, size_t len, int prot);
 long sys_munmap(void *addr, size_t len);
-long sys_rt_sigaction(int sig, const struct sigaction *act, struct sigaction *oact, size_t sigsetsize);
+long sys_rt_sigaction(int sig, const struct kernel_sigaction *act, struct kernel_sigaction *oact, size_t sigsetsize);
 long sys_rt_sigprocmask(int how, const sigset_t *set, sigset_t *oset, size_t sigsetsize);
-long sys_rt_sigreturn(unsigned long __unused) __attribute__ ((noreturn));
 long sys_pipe(int *filedes);
 long sys_dup(int filedes);
 long sys_dup2(int oldfd, int newfd);
@@ -270,7 +276,7 @@ int             mprotect(void *addr, size_t len, int prot);
 int             munmap(void *addr, size_t len);
 int             sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
 int             sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
-void            sigreturn() __attribute__ ((noreturn));
+void            sigreturn(void);
 int             pipe(int *filedes);
 int             dup(int filedes);
 int             dup2(int oldfd, int newfd);
