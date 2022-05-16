@@ -3,4 +3,5 @@
 !*.h
 !*.asm
 !Makefile
+!README.md
 !.gitignore
