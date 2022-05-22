@@ -322,49 +322,6 @@ sighandler_t signal(int signum, sighandler_t handler) {
     return oact.sa_handler;
 }
 
-int setjmp(jmp_buf env) {
-    __asm__(
-        "   mov    %rbx,      (%rdi)    # jmp_buf[0] = rbx\n"
-        "   lea    16(%rbp),  %rax      # get previous value of rsp, before call\n"
-        "   mov    %rax,      8(%rdi)   # jmp_buf[1] = rsp before call\n"
-        "   mov    (%rbp),    %rax      \n"
-        "   mov    %rax,      16(%rdi)  # jmp_buf[2] = rbp\n"
-        "   mov    %r12,      24(%rdi)  # jmp_buf[3] = r12\n"
-        "   mov    %r13,      32(%rdi)  # jmp_buf[4] = r13\n"
-        "   mov    %r14,      40(%rdi)  # jmp_buf[5] = r14\n"
-        "   mov    %r15,      48(%rdi)  # jmp_buf[6] = r15\n"
-        "   mov    8(%rbp),   %rax      # get rip from top of stack\n"
-        "   mov    %rax,      56(%rdi)  # jmp_buf[7] = saved rip\n"
-    );
+// setjmp function is implemented in assembly.
 
-    sigprocmask(SIG_UNBLOCK, NULL, &env->mask);
-
-    return 0;
-}
-
-void longjmp(jmp_buf env, int val) {
-    __asm__(
-        "   push   %rdi                 \n"
-        "   push   %rsi                 \n"
-    );
-
-    sigprocmask(SIG_BLOCK, &env->mask, NULL);
-
-    __asm__(
-        "   pop    %rsi                 \n"
-        "   pop    %rdi                 \n"
-        "   mov    %rsi,        %rax    \n"
-        "   test   %rax,        %rax    # check val == 0 or not\n"
-        "   jnz    jump_back            \n"
-        "jump_back:                     \n"
-        "   mov    (%rdi),      %rbx    # rbx = jmp_buf[0]\n"
-        "   mov    8(%rdi),     %rsp    # rsp = jmp_buf[1]\n"
-        "   mov    16(%rdi),    %rbp    # rbp = jmp_buf[2]\n"
-        "   mov    24(%rdi),    %r12    # r12 = jmp_buf[3]\n"
-        "   mov    32(%rdi),    %r13    # r13 = jmp_buf[4]\n"
-        "   mov    40(%rdi),    %r14    # r14 = jmp_buf[5]\n"
-        "   mov    48(%rdi),    %r15    # r15 = jmp_buf[6]\n"
-        "   mov    56(%rdi),    %rcx    # rcx = jmp_buf[7]\n"
-        "   jmp    *%rcx                # rip = rcx\n"
-    );
-}
+// longjmp function is implemented in assembly.

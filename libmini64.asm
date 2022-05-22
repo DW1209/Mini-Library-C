@@ -84,3 +84,73 @@ open_quit:
 sigreturn:
 	mov		rax, 	15
 	syscall
+
+	global setjmp:function
+setjmp:
+	push 	rbp
+	mov 	rbp, 				rsp
+
+	; set jmp_buf[8]
+	mov 	QWORD [rdi], 		rbx 		; jmp_buf[0] = rbx
+	lea 	r10, 				[rbp + 16]
+	mov 	QWORD [rdi + 8], 	r10 		; jmp_buf[1] = rsp
+	mov 	r10, 				[rbp]
+	mov 	QWORD [rdi + 16], 	r10 		; jmp_buf[2] = rbp
+	mov 	QWORD [rdi + 24], 	r12 		; jmp_buf[3] = r12
+	mov 	QWORD [rdi + 32], 	r13 		; jmp_buf[4] = r13
+	mov 	QWORD [rdi + 40], 	r14 		; jmp_buf[5] = r14
+	mov 	QWORD [rdi + 48], 	r15 		; jmp_buf[6] = r15
+	mov 	r10, 				[rbp + 8]
+	mov 	QWORD [rdi + 56], 	r10			; jmp_buf[7] = return address
+
+	; set sigmask
+	push 	rdi
+	sub 	rsp, 				8
+	mov 	rdi, 				1 			; 1st argument (rdi) = SIG_UNBLOCK
+	mov 	rsi, 				0 			; 2nd argument (rsi) = NULL
+	mov 	rdx, 				rsp 		; 3rd argument (rdx) = sigmask
+	mov 	rcx, 				8 			; 4th argument (rcx) = sizeof(sigset_t)
+	call 	sys_rt_sigprocmask
+	mov 	r10, 				[rsp]
+	add 	rsp, 				8
+	pop 	rdi
+	mov 	QWORD [rdi + 64], 	r10 		; jmp_buf[7] = sigmask
+
+	mov 	rsp, 				rbp
+	pop 	rbp
+
+	; set return value
+	mov 	rax, 				0 			; return 0
+	ret
+
+	global longjmp:function
+longjmp:
+	push 	rbp
+	mov 	rbp, 				rsp
+
+	; recover sigmask
+	push 	rdi
+	push 	rsi	
+	mov		r10,				[rdi + 64]
+	mov 	rdi, 				2 			; 1st argument (rdi) = SIG_SETMASK
+	mov 	rsi, 				r10 		; 2nd argument (rsi) = sigmask
+	mov 	rdx, 				0			; 3rd argument (rdx) = NULL	
+	mov 	rcx, 				8 			; 4th argument (rcx) = sizeof(sigset_t)
+	call 	sys_rt_sigprocmask
+	pop 	rsi
+	pop 	rdi
+
+	; recover from jmp_buf[8]
+	mov 	QWORD rbx, 			[rdi] 		; rbx = jmp_buf[0]
+	mov 	QWORD rsp, 			[rdi + 8] 	; rsp = jmp_buf[1]
+	mov 	QWORD rbp, 			[rdi + 16] 	; rbp = jmp_buf[2]
+	mov 	QWORD r12, 			[rdi + 24] 	; r12 = jmp_buf[3]
+	mov 	QWORD r13, 			[rdi + 32] 	; r13 = jmp_buf[4]
+	mov 	QWORD r14, 			[rdi + 40] 	; r14 = jmp_buf[5]
+	mov 	QWORD r15, 			[rdi + 48] 	; r15 = jmp_buf[6]
+	mov 	rax, 				rsi
+	mov 	QWORD r10, 			[rdi + 56]
+	jmp 	r10 							; jump to jmp_buf[7]
+
+	; return (ignored)
+	ret
