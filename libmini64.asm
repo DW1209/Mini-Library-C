@@ -131,7 +131,7 @@ longjmp:
 	; recover sigmask
 	push 	rdi
 	push 	rsi	
-	mov		r10,				[rdi + 64]
+	mov 	r10,				[rdi + 64]
 	mov 	rdi, 				2 			; 1st argument (rdi) = SIG_SETMASK
 	mov 	rsi, 				r10 		; 2nd argument (rsi) = sigmask
 	mov 	rdx, 				0			; 3rd argument (rdx) = NULL	
