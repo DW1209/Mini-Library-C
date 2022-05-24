@@ -114,7 +114,7 @@ setjmp:
 	mov 	r10, 				[rsp]
 	add 	rsp, 				8
 	pop 	rdi
-	mov 	QWORD [rdi + 64], 	r10 		; jmp_buf[7] = sigmask
+	mov 	QWORD [rdi + 64], 	r10 		; mask = sigmask
 
 	mov 	rsp, 				rbp
 	pop 	rbp
